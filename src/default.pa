@@ -1,0 +1,43 @@
+#!/usr/bin/pulseaudio -nF
+
+.fail
+
+load-module module-alsa-sink device=pcmHwTDM3TX_p sink_name=alsa_output.TDM3TX tsched=0 fragment_size=3072 fragments=3 channels=8 rewind_safeguard=20480 format=s16le channel_map=aux0,aux1,aux2,aux3,aux4,aux5,aux6,aux7
+
+load-module module-alsa-sink device=avb_csm_amp sink_name=alsa_output.avb.csm_amp tsched=0 channels=6 rewind_safeguard=20480 format=s16le channel_map=aux0,aux1,aux2,aux3,aux4,aux5 mmap=1
+
+load-module module-alsa-sink device=avb_csm_rsi sink_name=alsa_output.avb.csm_rsi tsched=0 channels=4 rewind_safeguard=20480 format=s16le channel_map=aux0,aux1,aux2,aux3 mmap=1
+
+load-module module-combine-sink slaves=alsa_output.TDM3TX,alsa_output.avb.csm_amp,alsa_output.avb.csm_rsi adjust_time=0 channels=8 rate=48000 channel_map=aux0,aux1,aux2,aux3,aux4,aux5,aux6,aux7
+
+
+# Tuner
+load-module module-alsa-source device=pcmHwTDM3RX_Tuner_c source_name=alsa_input.TDM3RX_Tuner tsched=0 fragment_size=3072 fragments=3 channels=2 channel_map=aux0,aux1
+#load-module module-loopback source=alsa_input.TDM3RX_Tuner sink=combined adjust_time=0 sink_input_properties=media.name=Dirana_Tuner
+
+# Chime
+load-module module-alsa-source device=pcmHwTDM3RX_Chime_c source_name=alsa_input.TDM3RX_Chime tsched=0 fragment_size=3072 fragments=3 channels=2 channel_map=aux0,aux1
+#load-module module-loopback source=alsa_input.TDM3RX_Chime sink=combined adjust_time=0 sink_input_properties=media.name=Dirana_Chime
+
+# Sxm
+load-module module-alsa-source device=pcmHwTDM3RX_Sxm_c source_name=alsa_input.TDM3RX_Sxm tsched=0 fragment_size=3072 fragments=3 channels=2 channel_map=aux0,aux1
+#load-module module-loopback source=alsa_input.TDM3RX_Sxm sink=combined adjust_time=0 sink_input_properties=media.name=Dirana_Sxm
+
+# Aux
+load-module module-alsa-source device=pcmHwTDM3RX_Aux_c source_name=alsa_input.TDM3RX_Aux tsched=0 fragment_size=3072 fragments=3 channels=2 channel_map=aux0,aux1
+#load-module module-loopback source=alsa_input.TDM3RX_Aux sink=combined adjust_time=0 sink_input_properties=media.name=Dirana_Aux
+
+
+# AVB RSI_IN
+load-module module-alsa-source device=avb_rsi_csm tsched=0 source_name=alsa_input.avb.rsi_csm channels=2 channel_map=aux0,aux1 mmap=1
+#load-module module-loopback source=alsa_input.avb.rsi_csm sink=combined adjust_time=0 sink_input_properties=media.name=RSI_IN1
+
+# AVB Onstar DL and PROMPT
+load-module module-alsa-source device=avb_tcp_csm tsched=0 source_name=alsa_input.avb.tcp_csm channels=2 channel_map=aux0,aux1
+#load-module module-loopback source=alsa_input.avb.tcp_csm sink=combined adjust_time=0 sink_input_properties=media.name=TCP_PHONE_DL_AND_PROMPT
+
+### Load several protocols
+load-module module-native-protocol-unix
+
+### Load suspend-on-idle to save CPU cycles when pulseaudio has to send empty data to the soundcard during idle
+load-module module-suspend-on-idle timeout=10
